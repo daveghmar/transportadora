@@ -97,7 +97,7 @@
   const total = document.getElementById('total');
 
   // Agora salva objetos, não apenas strings
-  let codigosA = JSON.parse(localStorage.getItem('codigos_alpar') || '[]');
+  let codigosA = JSON.parse(localStorage.getItem('codigos_alparl') || '[]');
 
   atualizarTela();
 
@@ -120,7 +120,7 @@
   });
 
   function salvar() {
-    localStorage.setItem('codigos_alpar', JSON.stringify(codigosA));
+    localStorage.setItem('codigos_alparl', JSON.stringify(codigosA));
   }
 
   function atualizarTela() {
@@ -174,3 +174,4 @@
 
 </body>
 </html>
+
