@@ -238,36 +238,49 @@
         }
 
         function exportarExcel() {
-            let dados = [];
-            const motorista = localStorage.getItem(MOTORISTA_KEY) || 'N/A';
-            const placa = localStorage.getItem(PLACA_KEY) || 'N/A';
+    let dados = [];
 
-            // Inclui as informações de identificação no cabeçalho dos dados
-            dados.push({ Marca: "MOTORISTA", Nº: 1, Código: motorista });
-            dados.push({ Marca: "VEÍCULO", Nº: 2, Código: placa });
-            dados.push({ Marca: "---", Nº: 3, Código: "---" }); // Separador
+    const motorista = localStorage.getItem("motorista") || "N/A";
+    const placa = localStorage.getItem("placa") || "N/A";
 
-            marcas.forEach(m => {
-                const codigos = JSON.parse(localStorage.getItem(m.chave) || '[]');
-                codigos.forEach((c, i) => {
-                    dados.push({ Marca: m.nome, Nº: i + 1, Código: c });
+    // Cabeçalho
+    dados.push({ Marca: "Marca", Numero: "Nº", Codigo: "Código", Hora: "Hora" });
+
+    // Bloco Motorista / Veículo
+    dados.push({ Marca: "Motorista", Numero: "", Codigo: motorista, Hora: "" });
+    dados.push({ Marca: "Veículo", Numero: "", Codigo: placa, Hora: "" });
+    dados.push({ Marca: "----------------", Numero: "", Codigo: "", Hora: "" });
+
+    // Para cada marca salva
+    MARCAS.forEach(marca => {
+        const registros = JSON.parse(localStorage.getItem(marca)) || [];
+
+        if (registros.length > 0) {
+            // Nome da marca uma vez
+            dados.push({ Marca: marca, Numero: "", Codigo: "", Hora: "" });
+
+            registros.forEach((item, idx) => {
+                dados.push({
+                    Marca: "",
+                    Numero: idx + 1,
+                    Codigo: item.codigo,
+                    Hora: item.hora || ""
                 });
             });
 
-            if (dados.length <= 3) { // Contando os 3 itens de cabeçalho
-                alert('Nenhum código para exportar.');
-                return;
-            }
-
-            const ws = XLSX.utils.json_to_sheet(dados);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Contagem Total");
-            
-            // Nome do arquivo agora inclui Motorista/Placa
-            const nomeArquivo = `contagem_${motorista.split(' ')[0]}_${placa}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
-            
-            XLSX.writeFile(wb, nomeArquivo);
+            // Linha separadora
+            dados.push({ Marca: "", Numero: "", Codigo: "", Hora: "" });
         }
+    });
+
+    // Geração do Excel
+    const worksheet = XLSX.utils.json_to_sheet(dados);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contagem");
+
+    XLSX.writeFile(workbook, "contagem.xlsx");
+}
+
 
         function limpar() {
             if (confirm('Tem certeza que deseja limpar TODOS os dados? Isso incluirá as informações de Motorista/Placa.')) {
