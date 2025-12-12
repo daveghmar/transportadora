@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todas as Marcas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    /* Fundo geral */
+body {
+  background: linear-gradient(135deg, #004692, #00bee4);
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+/* Container glass */
+.container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Grid das marcas e botões */
+.grid-marcas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* Botões principais */
+.grid-marcas a {
+  padding: 15px;
+  font-size: 1.2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  background: rgba(0, 208, 255);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  transition: 0.25s;
+}
+
+/* Hover bonito */
+.grid-marcas a:hover {
+  background: rgb(0, 208, 255);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+/* Título principal */
+h2 {
+  font-weight: 700;
+  text-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  margin-bottom: 15px;
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="container text-center">
+    <h2 class="mb-3">📦 Rio Preto Express</h2>
+
+    <div class="grid-marcas">
+      <a class="grid-marcas" href="/chegada/chegada.html"> ​🚚​​Chegada</a>
+      <a class="grid-marcas" href="/carregamento/carregamento.html">​ 🚛Carregamento</a>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+

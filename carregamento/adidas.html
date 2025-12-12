@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador adidas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #007bff, #00b4d8);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    input {
+      text-align: center;
+      font-size: 1.2rem;
+    }
+    table {
+      background: white;
+      color: black;
+      border-radius: 10px;
+      overflow: hidden;
+      th:nth-child(1) { width: 50px; text-align: center; }
+      th:nth-child(2) { width: auto; }
+      th:nth-child(3) { width: 120px; text-align: center; } /* hora */
+      th:nth-child(4) { width: 90px; text-align: center; }
+    }
+    .btn {
+      border-radius: 50px;
+    }
+    .botao-voltar {
+     position: fixed;
+     top: 15px;
+     left: 15px;
+     background: linear-gradient(135deg, #007bff, #00b4d8);
+     color: white;
+     text-decoration: none;
+     font-weight: 600;
+     padding: 10px 18px;
+     border-radius: 25px;
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+     transition: all 0.25s ease;
+     z-index: 1000;
+    }
+    .botao-voltar:hover {
+     background: linear-gradient(135deg, #00b4d8, #007bff);
+     transform: translateY(-2px);
+     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+    }
+  </style>
+</head>
+<body>
+
+<a href="carregamento.html" class="botao-voltar">⬅️ Voltar ao Início</a>
+    
+<div class="container text-center">
+  <h2 class="mb-3">📦 Contagem Adidas</h2>
+  <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+
+  <h4 class="mb-3">Total de Códigos: <span id="total">0</span></h4>
+
+  <div class="d-flex justify-content-center gap-2 mb-3">
+    <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
+    <button class="btn btn-danger" onclick="limpar()">🗑️ Limpar Tudo</button>
+  </div>
+
+  <table class="table table-sm table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Código</th>
+        <th>Hora</th> <!-- NOVA COLUNA -->
+        <th>❌</th>
+      </tr>
+    </thead>
+    <tbody id="tabela"></tbody>
+  </table>
+</div>
+
+<script>
+  const input = document.getElementById('barcodeInput');
+  const tabela = document.getElementById('tabela');
+  const total = document.getElementById('total');
+
+  // Agora salva objetos, não apenas strings
+  let codigosA = JSON.parse(localStorage.getItem('codigos_adidas') || '[]');
+
+  atualizarTela();
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const codigo = input.value.trim();
+
+      if (codigo && !codigosA.some(item => item.codigo === codigo)) {
+
+        // 🕒 pegar hora atual
+        const hora = new Date().toLocaleTimeString('pt-BR');
+
+        codigosA.push({ codigo, hora }); // salva código + hora
+        salvar();
+        atualizarTela();
+      }
+
+      input.value = '';
+    }
+  });
+
+  function salvar() {
+    localStorage.setItem('codigos_adidas', JSON.stringify(codigosA));
+  }
+
+  function atualizarTela() {
+    tabela.innerHTML = '';
+    codigosA.forEach((item, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${item.codigo}</td>
+        <td>${item.hora}</td>
+        <td>
+          <button class="btn btn-sm btn-danger" onclick="limparcod(${i})">Excluir</button>
+        </td>`;
+      tabela.appendChild(tr);
+    });
+    total.textContent = codigosA.length;
+  }
+
+  function limparcod(index) {
+    if (confirm('Tem certeza que deseja remover este código?')) {
+      codigosA.splice(index, 1);
+      salvar();
+      atualizarTela();
+    }
+  }
+
+  function limpar() {
+    if (confirm('Tem certeza que deseja limpar todos os códigos?')) {
+      codigosA = [];
+      salvar();
+      atualizarTela();
+    }
+  }
+
+  function exportarExcel() {
+    if (codigosA.length === 0) {
+      alert('Nenhum código para exportar.');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(
+      codigosA.map((c, i) => ({ Nº: i + 1, Código: c.codigo, Hora: c.hora }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Adidas");
+    
+    XLSX.writeFile(wb, `adidas_${new Date().toLocaleDateString('pt-BR')}.xlsx`);
+  }
+
+  window.addEventListener('click', () => input.focus());
+</script>
+
+</body>
+</html>

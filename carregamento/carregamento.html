@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todas as Marcas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #004692, #00bee4);
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid-marcas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .marca {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .marca button {
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .total-geral {
+            font-size: 1.4rem;
+            margin-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 15px;
+        }
+        .botao-voltar {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, #007bff, #00b4d8);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            transition: all 0.25s ease;
+            z-index: 1000;
+        }
+        
+        /* Estilo para garantir que o container não apareça antes do Modal */
+        .container.hidden {
+            display: none !important;
+        }
+
+        /* Estilo dentro do modal */
+        .modal-header, .modal-body, .modal-footer {
+            color: #000; /* Cores escuras para o texto do modal */
+        }
+    </style>
+</head>
+
+<body>
+
+<a href="../index.html" class="botao-voltar">⬅️ Voltar</a>
+    <div class="modal fade" id="modalIdentificacao" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalIdentificacaoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalIdentificacaoLabel">Identificação da Carga</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nomeMotorista" class="form-label">Nome do Motorista:</label>
+                        <input type="text" class="form-control" id="nomeMotorista" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="placaVeiculo" class="form-label">Placa do Veículo:</label>
+                        <input type="text" class="form-control" id="placaVeiculo" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="salvarIdentificacao()">Confirmar e Abrir Painel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container text-center hidden" id="mainContainer">
+        <h2 class="mb-3">📦 Painel de Contagem do Dia</h2>
+        
+        <div class="alert alert-info text-dark text-start" role="alert" id="dadosIdentificacao">
+            </div>
+
+        <div class="grid-marcas" id="listaMarcas"></div>
+
+        <div class="total-geral">
+            <strong>Total geral:</strong> <span id="totalGeral">0</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
+            <button class="btn btn-danger" onclick="limpar()">🗑️ Limpar Tudo</button>
+        </div>
+    </div>
+
+    <script>
+        const MOTORISTA_KEY = 'motorista_nome';
+        const PLACA_KEY = 'veiculo_placa';
+
+        const marcas = [
+            { nome: "Adidas", arquivo: "adidas.html", chave: "codigos_adidas" },
+            { nome: "Alpar", arquivo: "alpar.html", chave: "codigos_alpar" },
+            { nome: "BBCE", arquivo: "bbce.html", chave: "codigos_bbce" },
+            { nome: "Cambuci", arquivo: "cambuci.html", chave: "codigos_cambuci" },
+            { nome: "Cooper shoes", arquivo: "coopers.html", chave: "codigos_coopers" },
+            { nome: "Dass", arquivo: "dass.html", chave: "codigos_dass" },
+            { nome: "DPK", arquivo: "dpk.html", chave: "codigos_dpk" },
+            { nome: "Fila", arquivo: "fila.html", chave: "codigos_fila" },
+            { nome: "Frilog", arquivo: "frilog.html", chave: "codigos_frilog" },
+            { nome: "Magnum", arquivo: "magnum.html", chave: "codigos_magnum" },
+            { nome: "Nakata", arquivo: "nakata.html", chave: "codigos_nakata" },
+            { nome: "Nautica", arquivo: "nautica.html", chave: "codigos_nautica" },
+            { nome: "Neoruber", arquivo: "neoruber.html", chave: "codigos_neoruber" },
+            { nome: "New BR", arquivo: "newbr.html", chave: "codigos_newbr" },
+            { nome: "Pegada", arquivo: "pegada.html", chave: "codigos_pegada" },
+            { nome: "Penalty", arquivo: "penalty.html", chave: "codigos_penalty" },
+            { nome: "Picadilly", arquivo: "picadilly.html", chave: "codigos_picadilly" },
+            { nome: "Stampa", arquivo: "stampa.html", chave: "codigos_stampa" },
+            { nome: "Sugar Shoes", arquivo: "sugars.html", chave: "codigos_sugars" },
+            { nome: "Top Shoes", arquivo: "tops.html", chave: "codigos_tops" },
+            { nome: "Viamarte", arquivo: "viamarte.html", chave: "codigos_viamarte" },
+            { nome: "Vulcabras", arquivo: "vulcabras.html", chave: "codigos_vulcabras" },
+            { nome: "Whirlpool", arquivo: "whirlpool.html", chave: "codigos_whirlpool" },
+            { nome: "Outros", arquivo: "outros.html", chave: "codigos_outros" }
+        ];
+
+        // --- Funções do Modal de Identificação ---
+
+        function verificarIdentificacao() {
+            const motorista = localStorage.getItem(MOTORISTA_KEY);
+            const placa = localStorage.getItem(PLACA_KEY);
+            const mainContainer = document.getElementById('mainContainer');
+
+            if (motorista && placa) {
+                // Se já houver dados, exibe o painel
+                mainContainer.classList.remove('hidden');
+                exibirDadosIdentificacao(motorista, placa);
+                atualizarTela();
+            } else {
+                // Se não houver, exibe o modal
+                mainContainer.classList.add('hidden');
+                const modalElement = document.getElementById('modalIdentificacao');
+                const modalBootstrap = new bootstrap.Modal(modalElement);
+                modalBootstrap.show();
+            }
+        }
+
+        function salvarIdentificacao() {
+            const nomeMotorista = document.getElementById('nomeMotorista').value.trim();
+            const placaVeiculo = document.getElementById('placaVeiculo').value.trim();
+            
+            if (nomeMotorista === "" || placaVeiculo === "") {
+                alert("Por favor, preencha o nome do motorista e a placa do veículo.");
+                return;
+            }
+
+            localStorage.setItem(MOTORISTA_KEY, nomeMotorista);
+            localStorage.setItem(PLACA_KEY, placaVeiculo);
+            
+            // Fecha o modal
+            const modalElement = document.getElementById('modalIdentificacao');
+            const modalBootstrap = bootstrap.Modal.getInstance(modalElement);
+            modalBootstrap.hide();
+
+            // Exibe o painel principal
+            document.getElementById('mainContainer').classList.remove('hidden');
+            exibirDadosIdentificacao(nomeMotorista, placaVeiculo);
+            atualizarTela();
+        }
+
+        function exibirDadosIdentificacao(motorista, placa) {
+            const divDados = document.getElementById('dadosIdentificacao');
+            divDados.innerHTML = `
+                **Motorista:** ${motorista} | 
+                **Veículo:** ${placa}
+            `;
+        }
+
+        // --- Funções Originais do Painel ---
+
+        function atualizarTela() {
+            const lista = document.getElementById('listaMarcas');
+            lista.innerHTML = '';
+            let totalGeral = 0;
+
+            marcas.forEach(m => {
+                const codigos = JSON.parse(localStorage.getItem(m.chave) || '[]');
+                totalGeral += codigos.length;
+
+                const div = document.createElement('div');
+                div.className = 'marca';
+                div.innerHTML = `
+                    <span><strong>${m.nome}</strong>: ${codigos.length}</span>
+                    <button class="btn btn-light btn-sm" onclick="irPara('${m.arquivo}')">Abrir</button>
+                `;
+                lista.appendChild(div);
+            });
+
+            document.getElementById('totalGeral').textContent = totalGeral;
+        }
+
+        function irPara(pagina) {
+            window.location.href = pagina;
+        }
+
+        function exportarExcel() {
+            let dados = [];
+            const motorista = localStorage.getItem(MOTORISTA_KEY) || 'N/A';
+            const placa = localStorage.getItem(PLACA_KEY) || 'N/A';
+
+            // Inclui as informações de identificação no cabeçalho dos dados
+            dados.push({ Marca: "MOTORISTA", Nº: 1, Código: motorista });
+            dados.push({ Marca: "VEÍCULO", Nº: 2, Código: placa });
+            dados.push({ Marca: "---", Nº: 3, Código: "---" }); // Separador
+
+            marcas.forEach(m => {
+                const codigos = JSON.parse(localStorage.getItem(m.chave) || '[]');
+                codigos.forEach((c, i) => {
+                    dados.push({ Marca: m.nome, Nº: i + 1, Código: c });
+                });
+            });
+
+            if (dados.length <= 3) { // Contando os 3 itens de cabeçalho
+                alert('Nenhum código para exportar.');
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Contagem Total");
+            
+            // Nome do arquivo agora inclui Motorista/Placa
+            const nomeArquivo = `contagem_${motorista.split(' ')[0]}_${placa}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
+            
+            XLSX.writeFile(wb, nomeArquivo);
+        }
+
+        function limpar() {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados? Isso incluirá as informações de Motorista/Placa.')) {
+                marcas.forEach(m => localStorage.removeItem(m.chave));
+                localStorage.removeItem(MOTORISTA_KEY);
+                localStorage.removeItem(PLACA_KEY);
+                
+                // Força a re-exibição do modal
+                document.getElementById('mainContainer').classList.add('hidden');
+                verificarIdentificacao(); 
+            }
+        }
+
+        // Inicia a verificação ao carregar a página
+        verificarIdentificacao();
+    </script>
+</body>
+</html>
