@@ -104,6 +104,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="cancelarIdentificacao()">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="salvarIdentificacao()">Confirmar e Abrir Painel</button>
                 </div>
             </div>
@@ -160,6 +161,11 @@
         ];
 
         // --- Funções do Modal de Identificação ---
+
+       
+    function cancelarIdentificacao() {
+        window.location.href = "../index.html";
+    }
 
         function verificarIdentificacao() {
             const motorista = localStorage.getItem(MOTORISTA_KEY);
@@ -313,3 +319,4 @@
     </script>
 </body>
 </html>
+
