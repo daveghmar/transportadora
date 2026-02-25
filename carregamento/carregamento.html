@@ -116,7 +116,9 @@
         
         <div class="alert alert-info text-dark text-start" role="alert" id="dadosIdentificacao">
             </div>
-
+        
+        <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+        
         <div class="grid-marcas" id="listaMarcas"></div>
 
         <div class="total-geral">
@@ -127,7 +129,6 @@
             <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
             <button class="btn btn-danger" onclick="limpar()">🗑️ Limpar Tudo</button>
         </div>
-    </div>
 
     <script>
         const MOTORISTA_KEY = 'motorista_nome';
@@ -157,6 +158,8 @@
             { nome: "Viamarte", arquivo: "viamarte.html", chave: "codigos_viamarte" },
             { nome: "Vulcabras", arquivo: "vulcabras.html", chave: "codigos_vulcabras" },
             { nome: "Whirlpool", arquivo: "whirlpool.html", chave: "codigos_whirlpool" },
+            { nome: "Pdcampos", arquivo: "pdcampos.html", chave: "codigos_pdcampos" },
+            { nome: "TJB", arquivo: "tjb.html", chave: "codigos_tjb" },
             { nome: "Outros", arquivo: "outros.html", chave: "codigos_outros" }
         ];
 
@@ -177,6 +180,7 @@
                 mainContainer.classList.remove('hidden');
                 exibirDadosIdentificacao(motorista, placa);
                 atualizarTela();
+                configurarLeituraPrincipal();
             } else {
                 // Se não houver, exibe o modal
                 mainContainer.classList.add('hidden');
@@ -207,13 +211,14 @@
             document.getElementById('mainContainer').classList.remove('hidden');
             exibirDadosIdentificacao(nomeMotorista, placaVeiculo);
             atualizarTela();
+            configurarLeituraPrincipal();
         }
 
         function exibirDadosIdentificacao(motorista, placa) {
             const divDados = document.getElementById('dadosIdentificacao');
             divDados.innerHTML = `
-                **Motorista:** ${motorista} | 
-                **Veículo:** ${placa}
+                <b>Motorista:</b> ${motorista} <b>||</b> 
+                <b>Veículo:</b> ${placa}
             `;
         }
 
@@ -239,7 +244,6 @@
 
             document.getElementById('totalGeral').textContent = totalGeral;
         }
-
         function irPara(pagina) {
             window.location.href = pagina;
         }
@@ -313,75 +317,145 @@
                 verificarIdentificacao(); 
             }
         }
+        // =======================
+// FLASH VERDE GLOBAL
+// =======================
+function flashVerde() {
+  const existente = document.getElementById("flash-verde-overlay");
+  if (existente) existente.remove();
 
-        // Inicia a verificação ao carregar a página
-        verificarIdentificacao();
+  const div = document.createElement("div");
+  div.id = "flash-verde-overlay";
+  div.style.position = "fixed";
+  div.style.inset = "0";
+  div.style.background = "rgba(0, 255, 100, 0.25)";
+  div.style.zIndex = "999999";
+  div.style.pointerEvents = "none";
+  div.style.opacity = "0";
+  div.style.transition = "opacity 120ms ease";
+  document.body.appendChild(div);
 
-        // ===== FLASH VERDE GLOBAL (todas as telas) =====
-  function flashVerde() {
-    // evita empilhar flashes
-    const existente = document.getElementById("flash-verde-overlay");
-    if (existente) existente.remove();
+  requestAnimationFrame(() => {
+    div.style.opacity = "1";
+    setTimeout(() => {
+      div.style.opacity = "0";
+      setTimeout(() => div.remove(), 180);
+    }, 180);
+  });
+}
 
-    const div = document.createElement("div");
-    div.id = "flash-verde-overlay";
-    div.style.position = "fixed";
-    div.style.inset = "0";
-    div.style.background = "rgba(150, 255, 10, 0.55)";
-    div.style.zIndex = "999999";
-    div.style.pointerEvents = "none";
-    div.style.opacity = "100%";
-    div.style.transition = "opacity 1ms ease";
+const FLASH_KEY = "flash_scan_event_v1";
 
-    document.body.appendChild(div);
+function dispararFlashGlobal(marca, codigo) {
+  flashVerde(); // na tela atual
+  localStorage.setItem(FLASH_KEY, JSON.stringify({ t: Date.now(), marca, codigo }));
+}
 
-    // liga
-    requestAnimationFrame(() => {
-      div.style.opacity = "1";
-      // desliga
-      setTimeout(() => {
-        div.style.opacity = "0";
-        setTimeout(() => div.remove(), 180);
-      }, 180);
-    });
+// outras abas/janelas piscam quando localStorage muda
+window.addEventListener("storage", (e) => {
+  if (e.key === FLASH_KEY) flashVerde();
+});
+
+// se você trocar de tela e voltar rápido, pisca também
+window.addEventListener("focus", () => {
+  try {
+    const raw = localStorage.getItem(FLASH_KEY);
+    if (!raw) return;
+    const evt = JSON.parse(raw);
+    if (evt?.t && Date.now() - evt.t < 1500) flashVerde();
+  } catch {}
+});
+
+// =======================
+// DETECÇÃO DE MARCA (SUAS REGRAS)
+// =======================
+function detectarMarca(codigoRaw) {
+  const codigo = String(codigoRaw).trim();
+
+  if (codigo.length === 12 && /[a-zA-Z]/.test(codigo) && codigo.toLowerCase().includes("vol")) return "Nakata";
+  if (codigo.length === 23 && codigo.startsWith("(00)") && codigo.includes("17890858")) return "Vulcabras";
+  if (codigo.endsWith("#3")) return "Fila";
+  if (codigo.endsWith("#15")) return "Dass";
+  if (codigo.length === 20 && codigo.startsWith("00000") && codigo.includes("99999")) return "Adidas";
+  if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("0200") && codigo.endsWith("00004")) return "Sugar Shoes";
+  if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("0200") && codigo.endsWith("00001")) return "Neoruber";
+  if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("9") && codigo.endsWith("0009")) return "Nautica";
+  if (codigo.length === 17 && /^\d+$/.test(codigo)) return "Pdcampos";
+  if (codigo.length === 28 && /^\d+$/.test(codigo)) return "Alpar";
+  if (codigo.length === 34 && /^\d+$/.test(codigo) && codigo.endsWith("100010")) return "Cambuci";
+  if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("230")) return "TJB";
+  if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.includes("17909175")) return "Cooper shoes";
+
+  return "Outros";
+}
+
+function getMarcaObj(nomeMarca) {
+  return marcas.find(m => m.nome.toLowerCase() === nomeMarca.toLowerCase())
+      || marcas.find(m => m.nome === "Outros");
+}
+
+function lerLista(chave) {
+  return JSON.parse(localStorage.getItem(chave) || "[]");
+}
+function salvarLista(chave, lista) {
+  localStorage.setItem(chave, JSON.stringify(lista));
+}
+
+function contabilizarCodigo(codigo) {
+  const marcaNome = detectarMarca(codigo);
+  const marcaObj = getMarcaObj(marcaNome);
+  const chave = marcaObj.chave;
+
+  const lista = lerLista(chave);
+
+  // evita duplicado dentro da marca
+  if (lista.some(x => x.codigo === codigo)) {
+    return { ok: false, motivo: "duplicado", marca: marcaNome };
   }
 
-  // Evento que avisa OUTRAS telas (abas/janelas) quando um código foi contabilizado
-  const FLASH_KEY = "flash_scan_event_v1";
+  const hora = new Date().toLocaleTimeString("pt-BR");
+  lista.push({ codigo, hora });
+  salvarLista(chave, lista);
 
-  function dispararFlashGlobal(marca, codigo) {
-    // pisca na aba atual
-    flashVerde();
+  return { ok: true, marca: marcaNome };
+}
 
-    // grava um "evento" no localStorage -> outras abas recebem via "storage"
-    const payload = {
-      t: Date.now(),
-      marca: marca || null,
-      codigo: codigo || null
-    };
-    localStorage.setItem(FLASH_KEY, JSON.stringify(payload));
-  }
+// =======================
+// SCAN NA PÁGINA PRINCIPAL
+// =======================
+function configurarLeituraPrincipal() {
+  const input = document.getElementById("barcodeInput");
+  if (!input) return;
 
-  // outras abas/janelas abertas recebem aqui e piscam
-  window.addEventListener("storage", (e) => {
-    if (e.key === FLASH_KEY) {
-      flashVerde();
+  // evita registrar o listener 2x
+  if (input.dataset.listener === "1") return;
+  input.dataset.listener = "1";
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const codigo = input.value.trim();
+      if (!codigo) return;
+
+      const r = contabilizarCodigo(codigo);
+      if (r.ok) {
+        dispararFlashGlobal(r.marca, codigo);
+        atualizarTela();
+      } else {
+        // opcional: piscar vermelho em duplicado
+        // alert(`Duplicado em ${r.marca}`);
+      }
+
+      input.value = "";
     }
   });
 
-  // opcional: ao voltar pra aba (foco), se teve scan recente, pisca
-  window.addEventListener("focus", () => {
-    try {
-      const raw = localStorage.getItem(FLASH_KEY);
-      if (!raw) return;
-      const evt = JSON.parse(raw);
-      if (evt && evt.t && (Date.now() - evt.t) < 1500) {
-        flashVerde();
-      }
-    } catch {}
-  });
+  // mantém foco
+  window.addEventListener("click", () => input.focus());
+  setTimeout(() => input.focus(), 200);
+}
+        // Inicia a verificação ao carregar a página
+        verificarIdentificacao();
     </script>
 </body>
 </html>
-
 
