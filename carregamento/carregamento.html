@@ -316,7 +316,72 @@
 
         // Inicia a verificação ao carregar a página
         verificarIdentificacao();
+
+        // ===== FLASH VERDE GLOBAL (todas as telas) =====
+  function flashVerde() {
+    // evita empilhar flashes
+    const existente = document.getElementById("flash-verde-overlay");
+    if (existente) existente.remove();
+
+    const div = document.createElement("div");
+    div.id = "flash-verde-overlay";
+    div.style.position = "fixed";
+    div.style.inset = "0";
+    div.style.background = "rgba(150, 255, 10, 0.55)";
+    div.style.zIndex = "999999";
+    div.style.pointerEvents = "none";
+    div.style.opacity = "100%";
+    div.style.transition = "opacity 1ms ease";
+
+    document.body.appendChild(div);
+
+    // liga
+    requestAnimationFrame(() => {
+      div.style.opacity = "1";
+      // desliga
+      setTimeout(() => {
+        div.style.opacity = "0";
+        setTimeout(() => div.remove(), 180);
+      }, 180);
+    });
+  }
+
+  // Evento que avisa OUTRAS telas (abas/janelas) quando um código foi contabilizado
+  const FLASH_KEY = "flash_scan_event_v1";
+
+  function dispararFlashGlobal(marca, codigo) {
+    // pisca na aba atual
+    flashVerde();
+
+    // grava um "evento" no localStorage -> outras abas recebem via "storage"
+    const payload = {
+      t: Date.now(),
+      marca: marca || null,
+      codigo: codigo || null
+    };
+    localStorage.setItem(FLASH_KEY, JSON.stringify(payload));
+  }
+
+  // outras abas/janelas abertas recebem aqui e piscam
+  window.addEventListener("storage", (e) => {
+    if (e.key === FLASH_KEY) {
+      flashVerde();
+    }
+  });
+
+  // opcional: ao voltar pra aba (foco), se teve scan recente, pisca
+  window.addEventListener("focus", () => {
+    try {
+      const raw = localStorage.getItem(FLASH_KEY);
+      if (!raw) return;
+      const evt = JSON.parse(raw);
+      if (evt && evt.t && (Date.now() - evt.t) < 1500) {
+        flashVerde();
+      }
+    } catch {}
+  });
     </script>
 </body>
 </html>
+
 
