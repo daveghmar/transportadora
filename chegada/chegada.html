@@ -112,6 +112,7 @@
     { nome: "DPK", arquivo: "dpk.html", chave: "codigos_dpkd" },
     { nome: "Fila", arquivo: "fila.html", chave: "codigos_filaf" },
     { nome: "Frilog", arquivo: "frilog.html", chave: "codigos_frilogf" },
+    { nome: "Jamef", arquivo: "jamef.html", chave: "codigos_jamefj" },
     { nome: "Magnum", arquivo: "magnum.html", chave: "codigos_magnumm" },
     { nome: "Nakata", arquivo: "nakata.html", chave: "codigos_nakatan" },
     { nome: "Nautica", arquivo: "nautica.html", chave: "codigos_nautican" },
@@ -198,6 +199,11 @@
     // Coopershoes (18, contém 17909175)
     if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.includes("17909175")) {
       return "Cooper shoes";
+    }
+
+    // Jamef (padrão JAAA)
+    if (codigo.includes("JAAA")) {
+      return "Jamef";
     }
 
     return "Outros";
@@ -290,7 +296,7 @@
       const codigos = getLista(m.chave);
       codigos.forEach((c, i) => {
         // c é {codigo, hora}
-        dados.push({ Marca: m.nome, Nº: i + 1, Código: c.codigo, Hora: c.hora });
+        dados.push({ Marca: m.nome, Quantidade: i + 1, Código: c.codigo, Hora: c.hora });
       });
     });
 

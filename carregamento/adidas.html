@@ -161,7 +161,7 @@
       return;
     }
     const ws = XLSX.utils.json_to_sheet(
-      codigosA.map((c, i) => ({ Nº: i + 1, Código: c.codigo, Hora: c.hora }))
+      codigosA.map((c, i) => ({ Quantidade: i + 1, Código: c.codigo, Hora: c.hora }))
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Adidas");

@@ -159,7 +159,7 @@
       }
 
       const ws = XLSX.utils.json_to_sheet(
-        codigos.map((c, i) => ({ Nº: i + 1, Código: c.codigo, Hora: c.hora }))
+        codigos.map((c, i) => ({ Quantidade: i + 1, Código: c.codigo, Hora: c.hora }))
       );
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Pdcampos");

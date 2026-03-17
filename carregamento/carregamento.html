@@ -86,7 +86,7 @@
 
 <body>
 
-<a href="../index.html" class="botao-voltar">⬅️ Voltar</a>
+<a href="../index.html" class="botao-voltar">⬅︎</a>
     <div class="modal fade" id="modalIdentificacao" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalIdentificacaoLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -145,6 +145,7 @@
             { nome: "DPK", arquivo: "dpk.html", chave: "codigos_dpk" },
             { nome: "Fila", arquivo: "fila.html", chave: "codigos_fila" },
             { nome: "Frilog", arquivo: "frilog.html", chave: "codigos_frilog" },
+            { nome: "Jamef", arquivo: "jamef.html", chave: "codigos_jamef" },
             { nome: "Magnum", arquivo: "magnum.html", chave: "codigos_magnum" },
             { nome: "Nakata", arquivo: "nakata.html", chave: "codigos_nakata" },
             { nome: "Nautica", arquivo: "nautica.html", chave: "codigos_nautica" },
@@ -386,6 +387,7 @@ function detectarMarca(codigoRaw) {
   if (codigo.length === 34 && /^\d+$/.test(codigo) && codigo.endsWith("100010")) return "Cambuci";
   if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("230")) return "TJB";
   if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.includes("17909175")) return "Cooper shoes";
+  if (codigo.includes("JAAA")) return "Jamef";
 
   return "Outros";
 }
