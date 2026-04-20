@@ -390,7 +390,7 @@ function detectarMarca(codigoRaw) {
   if (codigo.length === 34 && /^\d+$/.test(codigo) && codigo.endsWith("100010")) return "Cambuci";
   if (codigo.length === 14 && /^\d+$/.test(codigo) && codigo.startsWith("230")) return "TJB";
   if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.includes("17909175")) return "Cooper shoes";
-  if (codigo.includes("JAAA")) return "Jamef";
+  if (codigo.includes("JAA")) return "Jamef";
 
   return "Outros";
 }
