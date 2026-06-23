@@ -8,76 +8,520 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
-    /* Fundo geral */
-body {
-  background: linear-gradient(135deg, #004692, #00bee4);
-  color: #fff;
-  font-family: 'Segoe UI', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
+    body {
+      background: linear-gradient(135deg, #004692, #00bee4);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* Container glass */
-.container {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 30px;
-  max-width: 900px;
-  width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
 
-/* Grid das marcas e botões */
-.grid-marcas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
-  margin-top: 25px;
-}
+    .grid-marcas {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
 
-/* Botões principais */
-.grid-marcas a {
-  padding: 15px;
-  font-size: 1.2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  text-align: center;
-  background: rgba(0, 208, 255);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  transition: 0.25s;
-}
+    .marca {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
 
-/* Hover bonito */
-.grid-marcas a:hover {
-  background: rgb(0, 208, 255);
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-}
+    .marca button {
+      border-radius: 20px;
+      font-weight: 600;
+    }
 
-/* Título principal */
-h2 {
-  font-weight: 700;
-  text-shadow: 0 3px 10px rgba(0,0,0,0.4);
-  margin-bottom: 15px;
-}
-
+    .total-geral {
+      font-size: 1.4rem;
+      margin-top: 25px;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      padding-top: 15px;
+    }
+    .logo-top {
+        position: fixed;      /* fixa na tela, mesmo ao rolar */
+        top: 10px;            /* distância do topo */
+        left: 10px;           /* distância da esquerda */
+        width: 120px;         /* tamanho da imagem (ajuste como quiser) */
+        z-index: 9999;        /* fica por cima de tudo */
+    }
+    .botao-voltar {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, #007bff, #00b4d8);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            transition: all 0.25s ease;
+            z-index: 1000;
+        }
   </style>
 </head>
 
 <body>
-  <div class="container text-center">
-    <h2 class="mb-3">📦 Rio Preto Express</h2>
 
-    <div class="grid-marcas">
-      <a class="grid-marcas" href="../transportadora/chegada/chegada.html"> ​🚚​​Chegada</a>
-      <a class="grid-marcas" href="/transportadora/carregamento/carregamento.html">​ 🚛Carregamento</a>
+
+  <div class="container text-center">
+   
+    <h2 class="mb-3">📦 Painel de Contagem de volume</h2>
+
+    <input type="file" id="excelUpload" class="form-control mb-3" accept=".xls,.xlsx" multiple onchange="lerExcel(event)">
+
+    <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+
+    <div class="grid-marcas" id="listaMarcas"></div>
+
+    <div class="total-geral" id="totalGeral">
+      Lidos: 0 / Esperado: 0 <br><span style="color: #ff9c1b; font-size: 0.9em;">Faltam: 0</span>
     </div>
+
+    <div class="d-flex justify-content-center gap-2 mt-4">
+      <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
+      <button class="btn btn-danger" onclick="limpar()">🗑️ Limpar Tudo</button>
+    </div>
+    
   </div>
+
+  <script>
+  const marcas = [
+    { nome: "Adidas", arquivo: "adidas.html", chave: "codigos_adidasc" },
+    { nome: "Alpar", arquivo: "alpar.html", chave: "codigos_alparl" },
+    { nome: "BBCE", arquivo: "bbce.html", chave: "codigos_bbceb" },
+    { nome: "Cambuci", arquivo: "cambuci.html", chave: "codigos_cambucic" },
+    { nome: "Cooper shoes", arquivo: "coopers.html", chave: "codigos_coopersc" },
+    { nome: "DPK", arquivo: "dpk.html", chave: "codigos_dpkd" },
+    { nome: "Fila", arquivo: "fila.html", chave: "codigos_filaf" },
+    { nome: "Frilog", arquivo: "frilog.html", chave: "codigos_frilogf" },
+    { nome: "Nakata", arquivo: "nakata.html", chave: "codigos_nakatan" },
+    { nome: "Nautica", arquivo: "nautica.html", chave: "codigos_nautican" },
+    { nome: "Neoruber", arquivo: "neoruber.html", chave: "codigos_neorubern" },
+    { nome: "Dass", arquivo: "dass.html", chave: "codigos_dassd" },
+    { nome: "Pegada", arquivo: "pegada.html", chave: "codigos_pegadap" },
+    { nome: "Penalty", arquivo: "penalty.html", chave: "codigos_penaltyp" },
+    { nome: "Piccadilly", arquivo: "piccadilly.html", chave: "codigos_picadillyp" },
+    { nome: "Stampa", arquivo: "stampa.html", chave: "codigos_stampas" },
+    { nome: "Sugar Shoes", arquivo: "sugars.html", chave: "codigos_sugarss" },
+    { nome: "Top Shoes", arquivo: "tops.html", chave: "codigos_topst" },
+    { nome: "Viamarte", arquivo: "viamarte.html", chave: "codigos_viamartev" },
+    { nome: "Vulcabras", arquivo: "vulcabras.html", chave: "codigos_vulcabrasv" },
+    { nome: "Whirlpool", arquivo: "whirlpool.html", chave: "codigos_whirlpoolw" },
+    { nome: "Pdcampos", arquivo: "pdcampos.html", chave: "codigos_pdcamposp" },
+    { nome: "TJB", arquivo: "tjb.html", chave: "codigos_tjbt" },
+    { nome: "Jamef", arquivo: "jamef.html", chave: "codigos_jamefj" },
+    { nome: "Outros", arquivo: "outros.html", chave: "codigos_outroso" }
+  ];
+
+  // ====== REGRAS (SUAS) ======
+  function detectarMarca(codigoRaw) {
+    const codigo = String(codigoRaw).trim();
+
+    // Jamef
+    if (codigo.includes("JAAA") || /^08J\d+$/.test(codigo)) {
+      return "Jamef";
+    }
+
+    // Nakata (alfanumérico, contém 'vol', 12)
+    if (codigo.length === 12 && codigo.toLowerCase().includes("vol")) {
+      return "Nakata";
+    }
+
+    // Vulcabras
+    if ((codigo.startsWith("(00)") && codigo.includes("(") && codigo.includes(")")) || (codigo.length === 30 && codigo.startsWith("185"))) {
+      return "Vulcabras";
+    }
+
+    // Fila (termina com #3)
+    if (codigo.endsWith("#3") && codigo.length === 10) {
+      return "Fila";
+    }
+
+    // Dass (termina com #15)
+    if (codigo.endsWith("#15") && codigo.length === 11) {
+      return "Dass";
+    }
+
+    // Adidas (20, começa 00000, contém 99999)
+    if (codigo.length === 20 && codigo.startsWith("00000") && codigo.includes("99999")) {
+      return "Adidas";
+    }
+
+    // Sugars (14, começa 0200, termina 00004)
+    if (codigo.length === 14 && codigo.startsWith("0200") && codigo.endsWith("00004")) {
+      return "Sugar Shoes";
+    }
+
+    // Neoruber (14, começa 0200, termina 00001)
+    if (codigo.length === 14 && codigo.startsWith("0200") && codigo.endsWith("00001")) {
+      return "Neoruber";
+    }
+
+    // Nautika (14, começa com 9, termina 0009)
+    if (codigo.length === 14 && codigo.startsWith("9") && codigo.endsWith("0009")) {
+      return "Nautica";
+    }
+
+    // Pdcampos (17)
+    if (codigo.length === 17 && /^\d+$/.test(codigo)) {
+      return "Pdcampos";
+    }
+
+    // Alpar (28)
+    if (codigo.length === 28 && /^\d+$/.test(codigo)) {
+      return "Alpar";
+    }
+
+    // Cambuci (34, termina 100010)
+    if (codigo.length === 34 && /^\d+$/.test(codigo) && codigo.endsWith("100010")) {
+      return "Cambuci";
+    }
+
+    // TJB (14, começa 230)
+    if (codigo.length === 14 && codigo.startsWith("230") && /^\d+$/.test(codigo)) {
+      return "TJB";
+    }
+
+    // Coopershoes (18, contém 17909175)
+    if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.includes("17909175")) {
+      return "Cooper shoes";
+    }
+
+    // Piccadilly: 20 digitos, começa com 0017900237
+    if (codigo.length === 20 && codigo.startsWith("0017900237")) {
+      return "Piccadilly";
+    }
+
+    // Stampa: 18 digitos, começa 1789
+    if (codigo.length === 18 && /^\d+$/.test(codigo) && codigo.startsWith("1789") && !codigo.includes("17909175")) {
+      return "Stampa";
+    }
+
+    return "Outros";
+  }
+
+  function chaveDaMarca(nomeMarca) {
+    const item = marcas.find(m => m.nome.toLowerCase() === nomeMarca.toLowerCase());
+    return item ? item.chave : "codigos_outroso";
+  }
+
+  function getLista(chave) {
+    return JSON.parse(localStorage.getItem(chave) || "[]");
+  }
+
+  function setLista(chave, lista) {
+    localStorage.setItem(chave, JSON.stringify(lista));
+  }
+
+  function adicionarCodigoNaMarca(codigo) {
+    const marcaNome = detectarMarca(codigo);
+    const chave = chaveDaMarca(marcaNome);
+
+    const lista = getLista(chave);
+
+    // Evita duplicado dentro da mesma marca
+    if (lista.some(item => item.codigo === codigo)) {
+      return { ok: false, motivo: "duplicado", marca: marcaNome };
+    }
+
+    const hora = new Date().toLocaleTimeString("pt-BR");
+    lista.push({ codigo, hora });
+    setLista(chave, lista);
+
+    return { ok: true, marca: marcaNome };
+  }
+
+  // ====== UI principal ======
+  const inputPrincipal = document.getElementById("barcodeInput");
+
+  inputPrincipal.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const codigo = inputPrincipal.value.trim();
+      if (!codigo) return;
+
+      const r = adicionarCodigoNaMarca(codigo);
+          
+      
+      if (r.ok) {
+        dispararFlashGlobal(r.marca, codigo);
+      }
+      // Opcional: feedback rápido
+      if (!r.ok && r.motivo === "duplicado") {
+        // você pode trocar alert por toast etc.
+        // alert(`Código duplicado na marca ${r.marca}`);
+      }
+
+      inputPrincipal.value = "";
+      atualizarTela();
+    }
+  });
+
+  function lerExcel(evento) {
+    const arquivos = evento.target.files;
+    if (!arquivos || arquivos.length === 0) return;
+
+    let totalEsperado = 0;
+    let volumesPorMarca = {};
+    let cidades = new Set();
+
+    marcas.forEach(m => volumesPorMarca[m.nome] = 0);
+    volumesPorMarca["Outros"] = 0;
+
+    let arquivosLidos = 0;
+
+    for (let i = 0; i < arquivos.length; i++) {
+      const file = arquivos[i];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
+
+        jsonData.forEach(row => {
+          let remetente = (row["Remetente"] || "").toString().toUpperCase();
+          let volumes = parseInt(row["Total Volumes"]) || 0;
+          let cidade = (row["Cidade"] || "").toString().trim();
+
+          if (cidade) cidades.add(cidade);
+
+          let marcaEncontrada = "Outros";
+          if (remetente.includes("MAGNUM")) {
+              marcaEncontrada = "Outros";
+          } else {
+              for (let m of marcas) {
+                if (remetente.includes(m.nome.toUpperCase())) {
+                  marcaEncontrada = m.nome;
+                  break;
+                }
+              }
+          }
+          
+          if (volumesPorMarca[marcaEncontrada] !== undefined) {
+            volumesPorMarca[marcaEncontrada] += volumes;
+          } else {
+            volumesPorMarca["Outros"] += volumes;
+          }
+          totalEsperado += volumes;
+        });
+
+        arquivosLidos++;
+        if (arquivosLidos === arquivos.length) {
+          localStorage.setItem("esperado_cidades", Array.from(cidades).join(" / "));
+          localStorage.setItem("esperado_total", totalEsperado);
+          localStorage.setItem("esperado_por_marca", JSON.stringify(volumesPorMarca));
+          atualizarTela();
+          alert("Planilhas carregadas com sucesso!");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  }
+
+  function atualizarTela() {
+    const lista = document.getElementById("listaMarcas");
+    lista.innerHTML = "";
+    let totalLido = 0;
+    let esperadoTotal = parseInt(localStorage.getItem("esperado_total")) || 0;
+    let esperadoPorMarca = JSON.parse(localStorage.getItem("esperado_por_marca") || "{}");
+
+    marcas.forEach(m => {
+      const codigos = getLista(m.chave);
+      totalLido += codigos.length;
+      
+      const esperado = esperadoPorMarca[m.nome] || 0;
+      const faltam = esperado - codigos.length;
+
+      // Só mostra a marca se tiver volumes esperados ou volumes lidos
+      if (esperado > 0 || codigos.length > 0) {
+        const div = document.createElement("div");
+        div.className = "marca";
+        div.innerHTML = `
+          <div style="text-align: left; line-height: 1.2;">
+            <strong>${m.nome}</strong><br>
+            <span style="font-size: 0.9em; color: #ddd;">Esperado: ${esperado} | Lido: ${codigos.length} | <b style="color: ${faltam <= 0 ? '#96ff0a' : '#ff960a'}">Faltam: ${faltam}</b></span>
+          </div>
+          <button class="btn btn-light btn-sm" onclick="irPara('${m.arquivo}')">Abrir</button>
+        `;
+        lista.appendChild(div);
+      }
+    });
+
+    const faltamTotal = esperadoTotal - totalLido;
+    document.getElementById("totalGeral").innerHTML = `Lidos: ${totalLido} / Esperado: ${esperadoTotal} <br><span style="color: ${faltamTotal <= 0 ? '#96ff0a' : '#ff960a'}; font-size: 0.9em;">Faltam: ${faltamTotal}</span>`;
+  }
+
+  function irPara(pagina) {
+    window.location.href = pagina;
+  }
+
+  function exportarExcel() {
+    let dadosDetalhes = [];
+    let dadosResumo = [];
+    
+    let totalLidoGeral = 0;
+    let esperadoTotal = parseInt(localStorage.getItem("esperado_total")) || 0;
+    let esperadoPorMarca = JSON.parse(localStorage.getItem("esperado_por_marca") || "{}");
+
+    marcas.forEach(m => {
+      const codigos = getLista(m.chave);
+      const lido = codigos.length;
+      const esperado = esperadoPorMarca[m.nome] || 0;
+      const faltam = esperado - lido;
+      
+      if (esperado > 0 || lido > 0) {
+          dadosResumo.push({
+             "Marca": m.nome,
+             "Esperado": esperado,
+             "Lido": lido,
+             "Faltam": faltam
+          });
+      }
+
+      totalLidoGeral += lido;
+
+      codigos.forEach((c, i) => {
+        dadosDetalhes.push({ 
+            "Marca": m.nome, 
+            "Ordem": i + 1, 
+            "Código de Barras": c.codigo, 
+            "Hora da Leitura": c.hora 
+        });
+      });
+    });
+
+    if (dadosDetalhes.length === 0 && dadosResumo.length === 0) {
+      alert("Nenhum dado para exportar.");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    // --- Planilha Resumo ---
+    if (dadosResumo.length > 0) {
+        dadosResumo.push({ "Marca": "" }); // Linha em branco
+        dadosResumo.push({
+            "Marca": "TOTAL GERAL",
+            "Esperado": esperadoTotal,
+            "Lido": totalLidoGeral,
+            "Faltam": esperadoTotal - totalLidoGeral
+        });
+
+        const wsResumo = XLSX.utils.json_to_sheet(dadosResumo);
+        // Ajustar largura das colunas
+        wsResumo['!cols'] = [ { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ];
+        XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+    }
+
+    // --- Planilha Detalhes ---
+    if (dadosDetalhes.length > 0) {
+        const wsDetalhes = XLSX.utils.json_to_sheet(dadosDetalhes);
+        // Ajustar largura das colunas
+        wsDetalhes['!cols'] = [ { wch: 20 }, { wch: 10 }, { wch: 40 }, { wch: 20 } ];
+        XLSX.utils.book_append_sheet(wb, wsDetalhes, "Detalhes");
+    }
+
+    const dataFormatada = new Date().toLocaleDateString("pt-BR").replace(/\//g, '-');
+    XLSX.writeFile(wb, `Relatorio_Geral_${dataFormatada}.xlsx`);
+  }
+
+  function limpar() {
+    if (confirm("Tem certeza que deseja limpar TODOS os dados?")) {
+      marcas.forEach(m => localStorage.removeItem(m.chave));
+      localStorage.removeItem("esperado_cidades");
+      localStorage.removeItem("esperado_total");
+      localStorage.removeItem("esperado_por_marca");
+      document.getElementById("excelUpload").value = "";
+      atualizarTela();
+    }
+  }
+
+  atualizarTela();
+  window.addEventListener("click", () => inputPrincipal.focus());
+
+  // ===== FLASH VERDE GLOBAL (todas as telas) =====
+  function flashVerde() {
+    // evita empilhar flashes
+    const existente = document.getElementById("flash-verde-overlay");
+    if (existente) existente.remove();
+
+    const div = document.createElement("div");
+    div.id = "flash-verde-overlay";
+    div.style.position = "fixed";
+    div.style.inset = "0";
+    div.style.background = "rgba(150, 255, 10, 0.55)";
+    div.style.zIndex = "999999";
+    div.style.pointerEvents = "none";
+    div.style.opacity = "100%";
+    div.style.transition = "opacity 1ms ease";
+
+    document.body.appendChild(div);
+
+    // liga
+    requestAnimationFrame(() => {
+      div.style.opacity = "1";
+      // desliga
+      setTimeout(() => {
+        div.style.opacity = "0";
+        setTimeout(() => div.remove(), 180);
+      }, 180);
+    });
+  }
+
+  // Evento que avisa OUTRAS telas (abas/janelas) quando um código foi contabilizado
+  const FLASH_KEY = "flash_scan_event_v1";
+
+  function dispararFlashGlobal(marca, codigo) {
+    // pisca na aba atual
+    flashVerde();
+
+    // grava um "evento" no localStorage -> outras abas recebem via "storage"
+    const payload = {
+      t: Date.now(),
+      marca: marca || null,
+      codigo: codigo || null
+    };
+    localStorage.setItem(FLASH_KEY, JSON.stringify(payload));
+  }
+
+  // outras abas/janelas abertas recebem aqui e piscam
+  window.addEventListener("storage", (e) => {
+    if (e.key === FLASH_KEY) {
+      flashVerde();
+    }
+  });
+
+  // opcional: ao voltar pra aba (foco), se teve scan recente, pisca
+  window.addEventListener("focus", () => {
+    try {
+      const raw = localStorage.getItem(FLASH_KEY);
+      if (!raw) return;
+      const evt = JSON.parse(raw);
+      if (evt && evt.t && (Date.now() - evt.t) < 1500) {
+        flashVerde();
+      }
+    } catch {}
+  });
+</script>
 </body>
 </html>
 
