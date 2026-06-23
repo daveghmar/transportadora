@@ -93,7 +93,7 @@
     <div class="grid-marcas" id="listaMarcas"></div>
 
     <div class="total-geral" id="totalGeral">
-      Lidos: 0 / Esperado: 0 <br><span style="color: #ff9c1b; font-size: 0.9em;">Faltam: 0</span>
+      Lidos: 0 / Esperado: 0 <br><span class="badge bg-danger text-white fs-6 mt-1">Faltam: 0</span>
     </div>
 
     <div class="d-flex justify-content-center gap-2 mt-4">
@@ -307,12 +307,17 @@
           let marcaEncontrada = "Outros";
           if (remetente.includes("MAGNUM")) {
               marcaEncontrada = "Outros";
+          } else if (remetente.includes("NEW BR") || remetente.includes("NEW BRASIL")) {
+              marcaEncontrada = "Dass";
           } else {
               for (let m of marcas) {
                 if (remetente.includes(m.nome.toUpperCase())) {
                   marcaEncontrada = m.nome;
                   break;
                 }
+              }
+              if (marcaEncontrada === "Outros" && (remetente.includes("PICADILLY") || remetente.includes("PICCADILLY"))) {
+                  marcaEncontrada = "Piccadilly";
               }
           }
           
@@ -358,7 +363,8 @@
         div.innerHTML = `
           <div style="text-align: left; line-height: 1.2;">
             <strong>${m.nome}</strong><br>
-            <span style="font-size: 0.9em; color: #ddd;">Esperado: ${esperado} | Lido: ${codigos.length} | <b style="color: ${faltam <= 0 ? '#96ff0a' : '#ff960a'}">Faltam: ${faltam}</b></span>
+            <span style="font-size: 0.9em; color: #ddd;">Esperado: ${esperado} | Lido: ${codigos.length} | </span>
+            <span class="badge ${faltam <= 0 ? 'bg-success text-white' : 'bg-danger text-white'}">Faltam: ${faltam}</span>
           </div>
           <button class="btn btn-light btn-sm" onclick="irPara('${m.arquivo}')">Abrir</button>
         `;
@@ -367,7 +373,7 @@
     });
 
     const faltamTotal = esperadoTotal - totalLido;
-    document.getElementById("totalGeral").innerHTML = `Lidos: ${totalLido} / Esperado: ${esperadoTotal} <br><span style="color: ${faltamTotal <= 0 ? '#96ff0a' : '#ff960a'}; font-size: 0.9em;">Faltam: ${faltamTotal}</span>`;
+    document.getElementById("totalGeral").innerHTML = `Lidos: ${totalLido} / Esperado: ${esperadoTotal} <br><span class="badge ${faltamTotal <= 0 ? 'bg-success text-white' : 'bg-danger text-white'} fs-6 mt-1">Faltam: ${faltamTotal}</span>`;
   }
 
   function irPara(pagina) {
@@ -429,6 +435,7 @@
         const wsResumo = XLSX.utils.json_to_sheet(dadosResumo);
         // Ajustar largura das colunas
         wsResumo['!cols'] = [ { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ];
+        wsResumo['!views'] = [{ showGridLines: true }];
         XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
     }
 
@@ -437,6 +444,7 @@
         const wsDetalhes = XLSX.utils.json_to_sheet(dadosDetalhes);
         // Ajustar largura das colunas
         wsDetalhes['!cols'] = [ { wch: 20 }, { wch: 10 }, { wch: 40 }, { wch: 20 } ];
+        wsDetalhes['!views'] = [{ showGridLines: true }];
         XLSX.utils.book_append_sheet(wb, wsDetalhes, "Detalhes");
     }
 

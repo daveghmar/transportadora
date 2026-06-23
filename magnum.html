@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -70,9 +70,9 @@
     
 <div class="container text-center">
     <h2 class="mb-3">📦 Contagem Magnum</h2>
-    <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+    <input id="barcodigo aqui" autofocus>
 
-    <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="C�digo aqui" autofocus>
+    <input id="barcodigo aqui" autofocus>
 
   <h4 class="mb-3">Total de Códigos: <span id="total">0</span></h4>
 
@@ -85,7 +85,7 @@
         <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>Código</th>
+                <th>❌</th>
                 <th>Hora</th>
                 <th>❌</th>
             </tr>
@@ -100,7 +100,7 @@
     const total = document.getElementById('total');
 
     // **ALTERADO**: Chave do LocalStorage única para "Magnum"
-    const STORAGE_KEY = 'codigos_magnumm'; 
+    const STORAGE_KEY = 'Códigos_magnumm'; 
 
     let codigos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
@@ -108,13 +108,13 @@
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            const codigo = input.value.trim();
+            codigo = input.value.trim();
 
-            if (codigo && !codigos.some(item => item.codigo === codigo)) {
+            if (codigo && !codigo === codigo)) {
                 // 🕒 pegar hora atual
                 const hora = new Date().toLocaleTimeString('pt-BR');
 
-                codigos.push({ codigo, hora });
+                codigo, hora });
                 salvar();
                 atualizarTela();
             }
@@ -125,12 +125,12 @@
 
     function salvar() {
         // **ALTERADO**: Usa a chave STORAGE_KEY
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(codigos));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Códigos));
     }
 
     function atualizarTela() {
         tabela.innerHTML = '';
-        codigos.forEach((item, i) => {
+        Códigos.forEach((item, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${i + 1}</td>
@@ -141,28 +141,28 @@
                 </td>`;
             tabela.appendChild(tr);
         });
-        total.textContent = codigos.length;
+        total.textContent = Códigos.length;
     }
 
     function limparcod(index) {
-        if (confirm('Tem certeza que deseja remover este código?')) {
-            codigos.splice(index, 1);
+        if (confirm('Tem certeza que deseja remover este códig⬅️')) {
+            Códigos.splice(index, 1);
             salvar();
             atualizarTela();
         }
     }
 
     function limpar() {
-        if (confirm('Tem certeza que deseja limpar todos os códigos?')) {
-            codigos = [];
+        if (codigo⬅️')) {
+            Códigos = [];
             salvar();
             atualizarTela();
         }
     }
 
       function exportarExcel() {
-    if (codigos.length === 0) {
-      alert('Nenhum código para exportar.');
+    if (Códigos.length === 0) {
+      alert('Nenhum codigo para exportar.');
       return;
     }
     
@@ -177,14 +177,14 @@
 
     // Planilha de Resumo
     const resumoDados = [
-        { 'Marca': marcaNome, 'Esperado': esperado, 'Lido': codigos.length, 'Faltam': esperado - codigos.length }
+        { 'Marca': marcaNome, 'Esperado': esperado, 'Lido': Códigos.length, 'Faltam': esperado - Códigos.length }
     ];
     const wsResumo = XLSX.utils.json_to_sheet(resumoDados);
     wsResumo['!cols'] = [ { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ];
     XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
 
     // Planilha de Detalhes
-    const detalhesDados = codigos.map((c, i) => ({ 'Ordem': i + 1, 'Código de Barras': c.codigo, 'Hora da Leitura': c.hora }));
+    codigo de Barras': codigo, 'Hora da Leitura': c.hora }));
     const wsDetalhes = XLSX.utils.json_to_sheet(detalhesDados);
     wsDetalhes['!cols'] = [ { wch: 10 }, { wch: 40 }, { wch: 20 } ];
     XLSX.utils.book_append_sheet(wb, wsDetalhes, 'Detalhes');
@@ -200,4 +200,7 @@
 
 </body>
 </html>
+
+
+
 

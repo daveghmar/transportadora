@@ -1,0 +1,231 @@
+import json
+
+marcas = [
+    {"nome": "Adidas", "arquivo": "adidas.html", "chave": "codigos_adidasc"},
+    {"nome": "Alpar", "arquivo": "alpar.html", "chave": "codigos_alparl"},
+    {"nome": "BBCE", "arquivo": "bbce.html", "chave": "codigos_bbceb"},
+    {"nome": "Cambuci", "arquivo": "cambuci.html", "chave": "codigos_cambucic"},
+    {"nome": "Cooper shoes", "arquivo": "coopers.html", "chave": "codigos_coopersc"},
+    {"nome": "DPK", "arquivo": "dpk.html", "chave": "codigos_dpkd"},
+    {"nome": "Fila", "arquivo": "fila.html", "chave": "codigos_filaf"},
+    {"nome": "Frilog", "arquivo": "frilog.html", "chave": "codigos_frilogf"},
+    {"nome": "Nakata", "arquivo": "nakata.html", "chave": "codigos_nakatan"},
+    {"nome": "Nautica", "arquivo": "nautica.html", "chave": "codigos_nautican"},
+    {"nome": "Neoruber", "arquivo": "neoruber.html", "chave": "codigos_neorubern"},
+    {"nome": "Dass", "arquivo": "dass.html", "chave": "codigos_dassd"},
+    {"nome": "Pegada", "arquivo": "pegada.html", "chave": "codigos_pegadap"},
+    {"nome": "Penalty", "arquivo": "penalty.html", "chave": "codigos_penaltyp"},
+    {"nome": "Piccadilly", "arquivo": "piccadilly.html", "chave": "codigos_picadillyp"},
+    {"nome": "Stampa", "arquivo": "stampa.html", "chave": "codigos_stampas"},
+    {"nome": "Sugar Shoes", "arquivo": "sugars.html", "chave": "codigos_sugarss"},
+    {"nome": "Top Shoes", "arquivo": "tops.html", "chave": "codigos_topst"},
+    {"nome": "Viamarte", "arquivo": "viamarte.html", "chave": "codigos_viamartev"},
+    {"nome": "Vulcabras", "arquivo": "vulcabras.html", "chave": "codigos_vulcabrasv"},
+    {"nome": "Whirlpool", "arquivo": "whirlpool.html", "chave": "codigos_whirlpoolw"},
+    {"nome": "Pdcampos", "arquivo": "pdcampos.html", "chave": "codigos_pdcamposp"},
+    {"nome": "TJB", "arquivo": "tjb.html", "chave": "codigos_tjbt"},
+    {"nome": "Jamef", "arquivo": "jamef.html", "chave": "codigos_jamefj"},
+    {"nome": "Outros", "arquivo": "outros.html", "chave": "codigos_outroso"}
+]
+
+for m in marcas:
+    content = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador {m["nome"]}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {{
+      background: linear-gradient(135deg, #007bff, #00b4d8);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }}
+    .container {{
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }}
+    input {{
+      text-align: center;
+      font-size: 1.2rem;
+    }}
+    table {{
+      background: white;
+      color: black;
+      border-radius: 10px;
+      overflow: hidden;
+      th:nth-child(1) {{ width: 50px; text-align: center; }}
+      th:nth-child(2) {{ width: auto; }}
+      th:nth-child(3) {{ width: 120px; text-align: center; }}
+      th:nth-child(4) {{ width: 90px; text-align: center; }}
+    }}
+    .btn {{
+      border-radius: 50px;
+    }}
+    .botao-voltar {{
+     position: fixed;
+     top: 15px;
+     left: 15px;
+     background: linear-gradient(135deg, #007bff, #00b4d8);
+     color: white;
+     text-decoration: none;
+     font-weight: 600;
+     padding: 10px 18px;
+     border-radius: 25px;
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+     transition: all 0.25s ease;
+     z-index: 1000;
+    }}
+    .botao-voltar:hover {{
+     background: linear-gradient(135deg, #00b4d8, #007bff);
+     transform: translateY(-2px);
+     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+    }}
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="botao-voltar">⬅️</a>
+    
+<div class="container text-center">
+  <h2 class="mb-3">{m["nome"]}</h2>
+
+  <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+
+  <h4 class="mb-3">📦 Total de Códigos: <span id="total">0</span></h4>
+
+  <div class="d-flex justify-content-center gap-2 mb-3">
+    <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
+    <button class="btn btn-danger" onclick="limpar()">🗑️ Limpar Tudo</button>
+  </div>
+
+  <table class="table table-sm table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Código</th>
+        <th>Hora</th>
+        <th>❌</th>
+      </tr>
+    </thead>
+    <tbody id="tabela"></tbody>
+  </table>
+</div>
+
+<script>
+  const input = document.getElementById('barcodeInput');
+  const tabela = document.getElementById('tabela');
+  const total = document.getElementById('total');
+
+  let codigos = JSON.parse(localStorage.getItem('{m["chave"]}') || '[]');
+
+  atualizarTela();
+
+  input.addEventListener('keydown', (e) => {{
+    if (e.key === 'Enter') {{
+      const codigo = input.value.trim();
+
+      if (codigo && !codigos.some(item => item.codigo === codigo)) {{
+        // 🕒 pegar hora atual
+        const hora = new Date().toLocaleTimeString('pt-BR');
+        codigos.push({{ codigo, hora }});
+        salvar();
+        atualizarTela();
+      }}
+
+      input.value = '';
+    }}
+  }});
+
+  function salvar() {{
+    localStorage.setItem('{m["chave"]}', JSON.stringify(codigos));
+  }}
+
+  function atualizarTela() {{
+    tabela.innerHTML = '';
+    codigos.forEach((item, i) => {{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${{i + 1}}</td>
+        <td>${{item.codigo}}</td>
+        <td>${{item.hora}}</td>
+        <td>
+          <button class="btn btn-sm btn-danger" onclick="limparcod(${{i}})">Excluir</button>
+        </td>`;
+      tabela.appendChild(tr);
+    }});
+    total.textContent = codigos.length;
+  }}
+
+  function limparcod(index) {{
+    if (confirm('Tem certeza que deseja remover este código?')) {{
+      codigos.splice(index, 1);
+      salvar();
+      atualizarTela();
+    }}
+  }}
+
+  function limpar() {{
+    if (confirm('Tem certeza que deseja limpar todos os códigos?')) {{
+      codigos = [];
+      salvar();
+      atualizarTela();
+    }}
+  }}
+
+  function exportarExcel() {{
+    if (codigos.length === 0) {{
+      alert('Nenhum código para exportar.');
+      return;
+    }}
+    
+    const marcaNome = "{m["nome"]}";
+    let esperado = 0;
+    try {{
+        const esperadoPorMarca = JSON.parse(localStorage.getItem('esperado_por_marca') || '{{}}');
+        esperado = esperadoPorMarca[marcaNome] || 0;
+    }} catch(e) {{}}
+
+    const wb = XLSX.utils.book_new();
+
+    // Planilha de Resumo
+    const resumoDados = [
+        {{ 'Marca': marcaNome, 'Esperado': esperado, 'Lido': codigos.length, 'Faltam': esperado - codigos.length }}
+    ];
+    const wsResumo = XLSX.utils.json_to_sheet(resumoDados);
+    wsResumo['!cols'] = [ {{ wch: 20 }}, {{ wch: 15 }}, {{ wch: 15 }}, {{ wch: 15 }} ];
+    wsResumo['!views'] = [ {{ showGridLines: true }} ];
+    XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
+
+    // Planilha de Detalhes
+    const detalhesDados = codigos.map((c, i) => ({{ 'Ordem': i + 1, 'Código de Barras': c.codigo, 'Hora da Leitura': c.hora }}));
+    const wsDetalhes = XLSX.utils.json_to_sheet(detalhesDados);
+    wsDetalhes['!cols'] = [ {{ wch: 10 }}, {{ wch: 40 }}, {{ wch: 20 }} ];
+    wsDetalhes['!views'] = [ {{ showGridLines: true }} ];
+    XLSX.utils.book_append_sheet(wb, wsDetalhes, 'Detalhes');
+
+    const dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    XLSX.writeFile(wb, marcaNome.replace(/\s+/g, '_') + '_' + dataFormatada + '.xlsx');
+  }}
+
+  window.addEventListener('click', () => input.focus());
+</script>
+
+</body>
+</html>
+"""
+    with open(m["arquivo"], "w", encoding="utf-8") as f:
+        f.write(content)
+
+print("Regenerated all files perfectly.")
