@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contador BBCE</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #007bff, #00b4d8);
@@ -158,37 +158,64 @@
       alert('Nenhum código para exportar.');
       return;
     }
-    
+
     const marcaNome = "BBCE";
     let esperado = 0;
     try {
-        const esperadoPorMarca = JSON.parse(localStorage.getItem('esperado_por_marca') || '{}');
-        esperado = esperadoPorMarca[marcaNome] || 0;
-    } catch(e) {}
+      const esperadoPorMarca = JSON.parse(localStorage.getItem('esperado_por_marca') || '{}');
+      esperado = esperadoPorMarca[marcaNome] || 0;
+    } catch (e) {}
+
+    const lido = codigos.length;
+    const faltam = esperado - lido;
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+    // ---------- estilos ----------
+    const lado = { style: 'thin', color: { rgb: 'BFBFBF' } };
+    const borda = { top: lado, bottom: lado, left: lado, right: lado };
+    const centro = { horizontal: 'center', vertical: 'center' };
+    const sCab = { font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 }, fill: { fgColor: { rgb: '007BFF' } }, alignment: centro, border: borda };
+    const sTitulo = { font: { bold: true, sz: 16, color: { rgb: '004692' } }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const sSub = { font: { italic: true, color: { rgb: '666666' } }, alignment: { horizontal: 'left' } };
+    const cab = t => ({ v: t, t: 's', s: sCab });
+    const txt = (v, fill) => ({ v: String(v), t: 's', s: { alignment: centro, border: borda, fill: fill ? { fgColor: { rgb: fill } } : undefined } });
+    const num = (v, fill, bold, cor) => ({ v: v, t: 'n', s: { alignment: centro, border: borda, font: { bold: !!bold, sz: bold ? 13 : 11, color: cor ? { rgb: cor } : undefined }, fill: fill ? { fgColor: { rgb: fill } } : undefined } });
+
+    const corFaltam = faltam <= 0 ? 'C6EFCE' : 'FFC7CE';
+    const corTxtFaltam = faltam <= 0 ? '006100' : '9C0006';
+
+    // ---------- uma única aba: resumo em cima, lista embaixo ----------
+    const aoa = [
+      [{ v: marcaNome, t: 's', s: sTitulo }],
+      [{ v: 'Gerado em ' + dataHoje, t: 's', s: sSub }],
+      [],
+      [cab('Esperado'), cab('Lido'), cab('Faltam')],
+      [num(esperado, null, true), num(lido, null, true), num(faltam, corFaltam, true, corTxtFaltam)],
+      [],
+      [cab('#'), cab('Código'), cab('Hora')]
+    ];
+    const linhaCab = aoa.length; // número (1-based) da linha do cabeçalho da lista
+    codigos.forEach((c, i) => {
+      const zebra = i % 2 === 1 ? 'F2F7FF' : null;
+      aoa.push([ num(i + 1, zebra), txt(c.codigo, zebra), txt(c.hora, zebra) ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const maxCod = Math.max(18, ...codigos.map(c => String(c.codigo).length)) + 4;
+    ws['!cols'] = [{ wch: 14 }, { wch: maxCod }, { wch: 18 }];
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }];
+    ws['!autofilter'] = { ref: 'A' + linhaCab + ':C' + aoa.length };
+    ws['!rows'] = [{ hpt: 26 }, {}, {}, { hpt: 22 }, { hpt: 24 }, {}, { hpt: 22 }];
 
     const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Contagem');
 
-    // Planilha de Resumo
-    const resumoDados = [
-        { 'Marca': marcaNome, 'Esperado': esperado, 'Lido': codigos.length, 'Faltam': esperado - codigos.length }
-    ];
-    const wsResumo = XLSX.utils.json_to_sheet(resumoDados);
-    wsResumo['!cols'] = [ { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ];
-    wsResumo['!views'] = [ { showGridLines: true } ];
-    XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
-
-    // Planilha de Detalhes
-    const detalhesDados = codigos.map((c, i) => ({ 'Ordem': i + 1, 'Código de Barras': c.codigo, 'Hora da Leitura': c.hora }));
-    const wsDetalhes = XLSX.utils.json_to_sheet(detalhesDados);
-    wsDetalhes['!cols'] = [ { wch: 10 }, { wch: 40 }, { wch: 20 } ];
-    wsDetalhes['!views'] = [ { showGridLines: true } ];
-    XLSX.utils.book_append_sheet(wb, wsDetalhes, 'Detalhes');
-
-    const dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    XLSX.writeFile(wb, marcaNome.replace(/\s+/g, '_') + '_' + dataFormatada + '.xlsx');
+    const dataArq = dataHoje.replace(/\//g, '-');
+    XLSX.writeFile(wb, marcaNome.replace(/\s+/g, '_') + '_' + dataArq + '.xlsx');
   }
 
-  window.addEventListener('click', () => input.focus());
+  
+window.addEventListener('click', () => input.focus());
 </script>
 
 </body>

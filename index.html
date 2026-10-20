@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Todas as Marcas</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
   <style>
     body {
@@ -381,78 +381,70 @@
   }
 
   function exportarExcel() {
-    let dadosDetalhes = [];
-    let dadosResumo = [];
-    
-    let totalLidoGeral = 0;
-    let esperadoTotal = parseInt(localStorage.getItem("esperado_total")) || 0;
-    let esperadoPorMarca = JSON.parse(localStorage.getItem("esperado_por_marca") || "{}");
+    const esperadoTotal = parseInt(localStorage.getItem("esperado_total")) || 0;
+    const esperadoPorMarca = JSON.parse(localStorage.getItem("esperado_por_marca") || "{}");
+    const dataHoje = new Date().toLocaleDateString("pt-BR");
+
+    const lado = { style: 'thin', color: { rgb: 'BFBFBF' } };
+    const borda = { top: lado, bottom: lado, left: lado, right: lado };
+    const centro = { horizontal: 'center', vertical: 'center' };
+    const sCab = { font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 }, fill: { fgColor: { rgb: '007BFF' } }, alignment: centro, border: borda };
+    const sTitulo = { font: { bold: true, sz: 16, color: { rgb: '004692' } }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const sSub = { font: { italic: true, color: { rgb: '666666' } }, alignment: { horizontal: 'left' } };
+    const cab = t => ({ v: t, t: 's', s: sCab });
+    const txt = (v, fill, bold) => ({ v: String(v), t: 's', s: { alignment: centro, border: borda, font: { bold: !!bold }, fill: fill ? { fgColor: { rgb: fill } } : undefined } });
+    const num = (v, fill, bold, cor) => ({ v: v, t: 'n', s: { alignment: centro, border: borda, font: { bold: !!bold, color: cor ? { rgb: cor } : undefined }, fill: fill ? { fgColor: { rgb: fill } } : undefined } });
+    const corF = f => f <= 0 ? 'C6EFCE' : 'FFC7CE';
+    const corT = f => f <= 0 ? '006100' : '9C0006';
+
+    const resumo = [];
+    const detalhes = [];
+    let totalLido = 0, maxCod = 18, z = 0;
 
     marcas.forEach(m => {
       const codigos = getLista(m.chave);
-      const lido = codigos.length;
       const esperado = esperadoPorMarca[m.nome] || 0;
-      const faltam = esperado - lido;
-      
-      if (esperado > 0 || lido > 0) {
-          dadosResumo.push({
-             "Marca": m.nome,
-             "Esperado": esperado,
-             "Lido": lido,
-             "Faltam": faltam
-          });
+      const faltam = esperado - codigos.length;
+      totalLido += codigos.length;
+      if (esperado > 0 || codigos.length > 0) {
+        resumo.push([txt(m.nome), num(esperado), num(codigos.length), num(faltam, corF(faltam), true, corT(faltam))]);
       }
-
-      totalLidoGeral += lido;
-
       codigos.forEach((c, i) => {
-        dadosDetalhes.push({ 
-            "Marca": m.nome, 
-            "Ordem": i + 1, 
-            "Código de Barras": c.codigo, 
-            "Hora da Leitura": c.hora 
-        });
+        const f = (z++ % 2) ? 'F2F7FF' : null;
+        maxCod = Math.max(maxCod, String(c.codigo).length + 4);
+        detalhes.push([txt(m.nome, f), num(i + 1, f), txt(c.codigo, f), txt(c.hora, f)]);
       });
     });
 
-    if (dadosDetalhes.length === 0 && dadosResumo.length === 0) {
-      alert("Nenhum dado para exportar.");
-      return;
-    }
+    if (resumo.length === 0 && detalhes.length === 0) { alert("Nenhum dado para exportar."); return; }
+
+    const faltamTotal = esperadoTotal - totalLido;
+    const aoa = [
+      [{ v: 'Relatório Geral de Contagem', t: 's', s: sTitulo }],
+      [{ v: 'Gerado em ' + dataHoje, t: 's', s: sSub }],
+      [],
+      [cab('Marca'), cab('Esperado'), cab('Lido'), cab('Faltam')],
+      ...resumo,
+      [txt('TOTAL GERAL', 'DDEBF7', true), num(esperadoTotal, 'DDEBF7', true), num(totalLido, 'DDEBF7', true), num(faltamTotal, corF(faltamTotal), true, corT(faltamTotal))],
+      [],
+      [cab('Marca'), cab('#'), cab('Código'), cab('Hora')]
+    ];
+    const linhaCab = aoa.length;
+    detalhes.forEach(l => aoa.push(l));
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 24 }, { wch: 14 }, { wch: maxCod }, { wch: 16 }];
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
+    if (detalhes.length > 0) ws['!autofilter'] = { ref: 'A' + linhaCab + ':D' + aoa.length };
 
     const wb = XLSX.utils.book_new();
-
-    // --- Planilha Resumo ---
-    if (dadosResumo.length > 0) {
-        dadosResumo.push({ "Marca": "" }); // Linha em branco
-        dadosResumo.push({
-            "Marca": "TOTAL GERAL",
-            "Esperado": esperadoTotal,
-            "Lido": totalLidoGeral,
-            "Faltam": esperadoTotal - totalLidoGeral
-        });
-
-        const wsResumo = XLSX.utils.json_to_sheet(dadosResumo);
-        // Ajustar largura das colunas
-        wsResumo['!cols'] = [ { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 } ];
-        wsResumo['!views'] = [{ showGridLines: true }];
-        XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
-    }
-
-    // --- Planilha Detalhes ---
-    if (dadosDetalhes.length > 0) {
-        const wsDetalhes = XLSX.utils.json_to_sheet(dadosDetalhes);
-        // Ajustar largura das colunas
-        wsDetalhes['!cols'] = [ { wch: 20 }, { wch: 10 }, { wch: 40 }, { wch: 20 } ];
-        wsDetalhes['!views'] = [{ showGridLines: true }];
-        XLSX.utils.book_append_sheet(wb, wsDetalhes, "Detalhes");
-    }
-
-    const dataFormatada = new Date().toLocaleDateString("pt-BR").replace(/\//g, '-');
+    XLSX.utils.book_append_sheet(wb, ws, 'Geral');
+    const dataFormatada = dataHoje.replace(/\//g, '-');
     XLSX.writeFile(wb, `Relatorio_Geral_${dataFormatada}.xlsx`);
   }
 
-  function limpar() {
+  
+function limpar() {
     if (confirm("Tem certeza que deseja limpar TODOS os dados?")) {
       marcas.forEach(m => localStorage.removeItem(m.chave));
       localStorage.removeItem("esperado_cidades");
