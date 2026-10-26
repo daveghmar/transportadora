@@ -49,6 +49,20 @@
       font-weight: 600;
     }
 
+    #btnEnviar {
+      background: linear-gradient(135deg, #007bff, #00b4d8);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      transition: all 0.25s ease;
+    }
+
+    #btnEnviar:hover {
+      filter: brightness(1.1);
+      color: #fff;
+    }
+
     .total-geral {
       font-size: 1.4rem;
       margin-top: 25px;
@@ -88,7 +102,10 @@
 
     <input type="file" id="excelUpload" class="form-control mb-3" accept=".xls,.xlsx" multiple onchange="lerExcel(event)">
 
-    <input id="barcodeInput" type="text" class="form-control mb-3" placeholder="Código aqui" autofocus>
+    <div class="input-group mb-3">
+      <input id="barcodeInput" type="text" class="form-control" placeholder="Código aqui" autofocus>
+      <button id="btnEnviar" class="btn" type="button" onclick="enviarCodigo()">➤ Enviar</button>
+    </div>
 
     <div class="grid-marcas" id="listaMarcas"></div>
 
@@ -253,25 +270,34 @@
   // ====== UI principal ======
   const inputPrincipal = document.getElementById("barcodeInput");
 
+  // Envia o código digitado (usado pelo botão "Enviar" e pela tecla Enter)
+  function enviarCodigo() {
+    const codigo = inputPrincipal.value.trim();
+    if (!codigo) {
+      inputPrincipal.focus();
+      return;
+    }
+
+    const r = adicionarCodigoNaMarca(codigo);
+
+    if (r.ok) {
+      dispararFlashGlobal(r.marca, codigo);
+    }
+    // Opcional: feedback rápido
+    if (!r.ok && r.motivo === "duplicado") {
+      // você pode trocar alert por toast etc.
+      // alert(`Código duplicado na marca ${r.marca}`);
+    }
+
+    inputPrincipal.value = "";
+    atualizarTela();
+    inputPrincipal.focus();
+  }
+
   inputPrincipal.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      const codigo = inputPrincipal.value.trim();
-      if (!codigo) return;
-
-      const r = adicionarCodigoNaMarca(codigo);
-          
-      
-      if (r.ok) {
-        dispararFlashGlobal(r.marca, codigo);
-      }
-      // Opcional: feedback rápido
-      if (!r.ok && r.motivo === "duplicado") {
-        // você pode trocar alert por toast etc.
-        // alert(`Código duplicado na marca ${r.marca}`);
-      }
-
-      inputPrincipal.value = "";
-      atualizarTela();
+      e.preventDefault();
+      enviarCodigo();
     }
   });
 
@@ -524,12 +550,3 @@ function limpar() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
