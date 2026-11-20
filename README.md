@@ -1,8 +1,5 @@
 # 📦 Sistema de Conferência e Triagem Logística de Volumes
 
-<p align="center">
-  <img src="riopre.png" alt="Logo do Sistema" width="220" />
-</p>
 
 <p align="center">
   <strong>Solução web leve, autônoma e inteligente para conferência, triagem por leitor de código de barras e controle de expedição em transportadoras e centros de distribuição.</strong>
@@ -124,9 +121,7 @@ Por se tratar de uma aplicação baseada em arquitetura **Client-Side**, você n
 ├── generate_pages.py      # Script Python gerador automatizado de páginas HTML
 ├── generate_pages.js      # Versão Node.js do gerador de páginas
 ├── patch_export.py        # Script utilitário para atualização em lote do exportador Excel
-├── update_excel.ps1       # Script PowerShell para manutenção automatizada no Windows
-├── teste1.xls             # Planilha de exemplo para testes de importação
-└── riopre.png             # Identidade visual / logotipo do sistema
+└── update_excel.ps1       # Script PowerShell para manutenção automatizada no Windows
 ```
 
 ---
