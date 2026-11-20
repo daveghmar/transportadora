@@ -128,5 +128,5 @@ Por se tratar de uma aplicação baseada em arquitetura **Client-Side**, você n
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **Davi ([@daveghmar](https://github.com/daveghmar))**  
+Desenvolvido por **Davi ([@daveghmar](https://github.com/daveghmar))**, **Murilo ([@cbelud422](https://github.com/cbelud422))** e Breno F. Soares
 Projeto de Conclusão de Curso (TCC) em Logística e Tecnologia da Informação.
