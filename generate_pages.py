@@ -142,6 +142,7 @@ for m in marcas:
         codigos.push({{ codigo, hora }});
         salvar();
         atualizarTela();
+        dispararFlashGlobal(codigo);
       }}
 
       input.value = '';
@@ -218,6 +219,61 @@ for m in marcas:
     const dataFormatada = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
     XLSX.writeFile(wb, marcaNome.replace(/\s+/g, '_') + '_' + dataFormatada + '.xlsx');
   }}
+
+  // ===== FLASH VERDE GLOBAL =====
+  function flashVerde() {{
+    const existente = document.getElementById("flash-verde-overlay");
+    if (existente) existente.remove();
+
+    const div = document.createElement("div");
+    div.id = "flash-verde-overlay";
+    div.style.position = "fixed";
+    div.style.inset = "0";
+    div.style.background = "rgba(150, 255, 10, 0.55)";
+    div.style.zIndex = "999999";
+    div.style.pointerEvents = "none";
+    div.style.opacity = "1";
+    div.style.transition = "opacity 1ms ease";
+
+    document.body.appendChild(div);
+
+    requestAnimationFrame(() => {{
+      div.style.opacity = "1";
+      setTimeout(() => {{
+        div.style.opacity = "0";
+        setTimeout(() => div.remove(), 180);
+      }}, 180);
+    }});
+  }}
+
+  const FLASH_KEY = "flash_scan_event_v1";
+
+  function dispararFlashGlobal(codigo) {{
+    flashVerde();
+    const payload = {{
+      t: Date.now(),
+      marca: "{m['nome']}",
+      codigo: codigo || null
+    }};
+    localStorage.setItem(FLASH_KEY, JSON.stringify(payload));
+  }}
+
+  window.addEventListener("storage", (e) => {{
+    if (e.key === FLASH_KEY) {{
+      flashVerde();
+    }}
+  }});
+
+  window.addEventListener("focus", () => {{
+    try {{
+      const raw = localStorage.getItem(FLASH_KEY);
+      if (!raw) return;
+      const evt = JSON.parse(raw);
+      if (evt && evt.t && (Date.now() - evt.t) < 1500) {{
+        flashVerde();
+      }}
+    }} catch {{}}
+  }});
 
   window.addEventListener('click', () => input.focus());
 </script>
